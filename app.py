@@ -5,7 +5,6 @@ import pandas as pd
 import os
 from config import config
 
-
 app = Flask(__name__)
 app.config.from_object(config['development'])
 
