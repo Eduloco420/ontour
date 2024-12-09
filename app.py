@@ -18,6 +18,10 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 def login_get():
     return login.login()
 
+@app.route('/validar', methods=['POST'])
+def verificartoken():
+    return login.validar()
+
 @app.route('/home')
 def home():
     return jsonify({"message":"Bienvenido a mi BackEnd"})

@@ -46,3 +46,12 @@ class AuthService():
             return authenticated_user
         except CustomException as ex:
             raise CustomException(ex)
+
+@main.route('/')
+def validar():
+    has_access = Security.verify_token(request.headers)
+    if has_access:
+        return jsonify({'message': "SUCCESS", 'success': True})
+    else:
+        response = jsonify({'message': 'Unauthorized', 'success': False})
+        return response, 401
