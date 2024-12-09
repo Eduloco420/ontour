@@ -4,11 +4,16 @@ import pagos, alumnos, seguros, cursos, paquetes, viaje, login, apoderado
 import pandas as pd 
 import os
 from config import config
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config.from_object(config['development'])
 
 conexion = MySQL(app)
+
+CORS(app)
+CORS(app, resources={r"/login": {"origins": "http://127.0.0.1:5501"}})
+
 
 # Crear la carpeta de almacenamiento si no existe
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -24,7 +29,7 @@ def verificartoken():
 
 @app.route('/home')
 def home():
-    return jsonify({"message":"Bienvenido a mi BackEnd"})
+    return jsonify({"message":"Bienvenido a mi BackEnd finallll"})
 
 # Ruta para listar pagos
 @app.route('/pagos', methods=['GET'])
@@ -34,7 +39,18 @@ def listar_pagos():
 # Ruta para listar alumnos    
 @app.route('/alumnos', methods=['GET'])
 def lista_alumnos():
-    return alumnos.get_alumnos(conexion)
+    id_param = request.args.get('id')
+    if id_param:
+        # Llama a la función obtener_alumno_por_id con el ID proporcionado
+        alumno = alumnos.obtener_alumno_por_id(conexion, id_param)
+        if alumno:
+            return jsonify({'alumno': alumno})
+        else:
+            return jsonify({'error': 'Alumno no encontrado'}), 404
+    else:
+        # Si no se proporciona el ID, devuelve todos los alumnos
+        return alumnos.get_alumnos(conexion)
+
 
 # Ruta para listar seguros
 @app.route('/seguros', methods=['GET'])
@@ -85,8 +101,9 @@ def agregar_curso():
     except Exception as e:
         conexion.connection.rollback()
         return 'Error en la carga de Datos, favor validar datos a cargar o archivo Excel'
-        
+          
 
+#ruta para traer los datos de los pdf
 @app.route('/archivos', methods=['GET'])
 def lista_doc():
     cursor=conexion.connection.cursor()
@@ -164,6 +181,35 @@ def alumnos_apoderado():
         alumnos.append(alumno)
     return jsonify({'alumnos':alumnos, 'mensaje':'Hola Karlita'})
 
+@app.route('/pefilApode', methods=['GET'])
+def info_perfil():
+
+    apoderado = request.json.get('id')
+    print("ID recibido:", apoderado)
+
+    cursor = conexion.connection.cursor()
+    sql = """SELECT 	u.id,
+                u.nom,
+                u.mail,
+                a.nom,
+                a.rut
+         FROM user u
+         INNER JOIN alumno a ON u.id = a.apoderado
+         WHERE a.id = '{0}';""".format(apoderado)
+
+    cursor.execute(sql)
+    datos = cursor.fetchall()
+    apoderados = []
+    for fila in datos:
+        fila = {  "id":fila[0],
+                    "nom":fila[1], 
+                    "mail":fila[2], 
+                    "nomAlum":fila[3], 
+                    "rutAlum":fila[4]}
+        apoderados.append(fila)
+        
+    return jsonify({'apoderados':apoderados})
+
 @app.route('/paquetes', methods=['GET'])
 def obtener_paquetes():
     return paquetes.get_paquetes(conexion)
@@ -172,6 +218,61 @@ def obtener_paquetes():
 @app.route('/infoViaje', methods=['GET'])
 def verInfoViaje():
     return viaje.verInfoViaje(conexion)
+
+
+@app.route('/cuotas_curso/<int:curso_id>', methods=['GET'])
+def cuotas_curso(curso_id):
+    try:
+        cursor = conexion.connection.cursor()
+        sql = """
+            SELECT 
+                c.id AS cuota_id,
+                a.rut AS alumno_rut,
+                c.valorCuota,
+                c.fechaCuota,
+                c.pagado
+            FROM cuota c
+            INNER JOIN alumno a ON c.alumnoCuota = a.id
+            WHERE a.curso = %s"""
+        cursor.execute(sql, (curso_id,))
+        cuotas = cursor.fetchall()
+        
+        if not cuotas:
+            return jsonify({'mensaje': 'No se encontraron cuotas para este curso', 'estado': 'sin datos'}), 404
+
+        total_cuotas = len(cuotas)
+        total_valor = sum(cuota[2] for cuota in cuotas)
+        pagadas = [cuota for cuota in cuotas if cuota[4] == 1]
+        pendientes = [cuota for cuota in cuotas if cuota[4] == 0]
+        total_pagado = sum(cuota[2] for cuota in pagadas)
+        total_pendiente = total_valor - total_pagado
+
+        porcentaje_avance = (total_pagado / total_valor) * 100 if total_valor > 0 else 0
+
+        return jsonify({
+            'total_valor': total_valor,
+            'total_pagado': total_pagado,
+            'total_pendiente': total_pendiente,
+            'porcentaje_avance': round(porcentaje_avance, 2),
+            'detalle_pagadas': [
+                {
+                    'cuota_id': cuota[0],
+                    'alumno_rut': cuota[1],
+                    'valor': cuota[2],
+                    'fecha_cuota': cuota[3].strftime('%Y-%m-%d')
+                } for cuota in pagadas
+            ],
+            'detalle_pendientes': [
+                {
+                    'cuota_id': cuota[0],
+                    'alumno_rut': cuota[1],
+                    'valor': cuota[2],
+                    'fecha_cuota': cuota[3].strftime('%Y-%m-%d')
+                } for cuota in pendientes
+            ],
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # Punto de entrada de la aplicación

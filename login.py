@@ -12,18 +12,25 @@ from app import conexion
 main = Blueprint('auth_blueprint', __name__)
 
 def login():
-    mail = request.json['mail']
-    password = request.json['password']
+    if not request.is_json:
+        return jsonify({'message': 'Content-type must be JSON'}), 400
+    
+    data = request.get_json()
+    
+    if 'mail' not in data or 'password' not in data:
+        return jsonify({'message': 'Missing mail or password'}), 400
+    
+    mail = data['mail']
+    password = data['password']
 
     _user = User(0, mail, password, "")
     authenticated_user = AuthService.login_user(_user)
 
-    if (authenticated_user != None):
+    if authenticated_user:
         encoded_token = Security.generate_token(authenticated_user)
-        return jsonify({'success': True, 'token': encoded_token})
+        return jsonify({'success': True, 'token': encoded_token, 'user': authenticated_user.to_dict()})
     else:
-        response = jsonify({'message': 'Unauthorized'})
-        return response, 401
+        return jsonify({'message': 'Unauthorized'}), 401
 
 
 ############
@@ -33,19 +40,22 @@ class AuthService():
     @classmethod
     def login_user(cls, user):
         try:
-            sql = conexion.connection.cursor()
+            cursor = conexion.connection.cursor()
             authenticated_user = None
-            with sql as cursor:
-                cursor.execute('SELECT id, mail, password, rol FROM user WHERE mail = %s AND password = %s', (user.mail, user.password))
-                
-                row = cursor.fetchone()
-                if row != None:
-                    authenticated_user = User(int(row[0]), row[1], row[2], row[3])
-                    print(row[3])
+            
+            cursor.execute('SELECT id, mail, password, rol FROM user WHERE mail = %s AND password = %s', (user.mail, user.password))
+            row = cursor.fetchone()
+
+            if row:
+                authenticated_user = User(int(row[0]), row[1], row[2], row[3])
             cursor.close()
+
             return authenticated_user
-        except CustomException as ex:
-            raise CustomException(ex)
+
+        except Exception as ex:
+            print(f"Error during login: {str(ex)}")
+            return None  # Si ocurre un error, devuelve None
+
 
 @main.route('/')
 def validar():

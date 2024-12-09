@@ -23,24 +23,16 @@ class Security():
 
     @classmethod
     def verify_token(cls, headers):
-        if 'Authorization' in headers.keys():
+        if 'Authorization' in headers:
             authorization = headers['Authorization']
             try:
-                encoded_token = authorization.split(" ")[1]
-                
-                if len(encoded_token) > 0:
-                    decoded_token = jwt.decode(encoded_token, "JWT_KEY", algorithms=['HS256'])
-                    # el contenido del token decodificado
-                    print(decoded_token)  
-                    return True
+                encoded_token = authorization.split(" ")[1]  # Asegúrate de obtener solo el token
+                decoded_token = jwt.decode(encoded_token, "JWT_KEY", algorithms=['HS256'])
+                print(decoded_token)  # Esto te ayudará a ver el contenido del token
+                return True
             except jwt.ExpiredSignatureError:
-                print("Token ha expirado.")
-            except jwt.InvalidSignatureError:
-                print("Firma del token no válida.")
-            except jwt.DecodeError:
-                print("Error al decodificar el token.")
-            except Exception as e:
-                print(f"Error inesperado: {e}")
-        
-        return False
+                return False  # El token ha expirado
+            except jwt.InvalidTokenError:
+                return False  # El token no es válido
+        return False  # Si no se encuentra la cabecera 'Authorization'
     

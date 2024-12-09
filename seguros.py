@@ -22,7 +22,6 @@ def valor_seguro(conexion, seguro, cantAlumnos):
     cursor.execute(sql)
     dato = cursor.fetchone()
     valorSeguro = dato[0]
-    print(valorSeguro)
     valorSeguroAlumno = math.ceil((valorSeguro / cantAlumnos) / 8)
 
     return valorSeguroAlumno

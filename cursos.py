@@ -30,12 +30,14 @@ def get_curso(conexion):
 
 def post_curso(conexion, contrato, nomCurso ,nomColegio ,paqueteTuristico ,seguro ,cantAlumnos, app, fechaViaje):
     cursor=conexion.connection.cursor()
-    sql = "INSERT INTO curso (nomCurso, nomColegio, paqueteTuristico, seguro, cantAlumnos, fechaViaje) values ('{0}','{1}','{2}','{3}','{4}','{5}');".format(nomCurso,
+
+    sql = """INSERT INTO curso (nomCurso, nomColegio, paqueteTuristico, seguro, cantAlumnos, fechaViaje) values ('{0}','{1}','{2}','{3}','{4}','{5}');""".format(nomCurso,
                                                                                                                                         nomColegio,
                                                                                                                                         paqueteTuristico,
                                                                                                                                         seguro,
                                                                                                                                         cantAlumnos,
                                                                                                                                         fechaViaje) 
+
     cursor.execute(sql)
     
     cursoId = cursor.lastrowid
@@ -45,4 +47,5 @@ def post_curso(conexion, contrato, nomCurso ,nomColegio ,paqueteTuristico ,segur
     cursor.execute(sql)
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], nombreDoc)
     contrato.save(file_path)
+    conexion.connection.commit()
     return cursoId

@@ -156,7 +156,7 @@ CREATE TABLE `archivo` (
   `curso` int,
   `ruta` varchar(255)
 );
-
+ 
 ALTER TABLE `alumno` ADD FOREIGN KEY (`curso`) REFERENCES `curso` (`id`);
 
 ALTER TABLE `curso` ADD FOREIGN KEY (`PaqueteTuristico`) REFERENCES `paqueteTuristico` (`id`);

@@ -3,7 +3,6 @@ from flask import jsonify, request
 def get_pagos(conexion):
     try:
         id_param = request.args.get('id')
-        
 
         if(id_param):
             cursor=conexion.connection.cursor()
