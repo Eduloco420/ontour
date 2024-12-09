@@ -106,8 +106,9 @@ def agregar_curso():
 #ruta para traer los datos de los pdf
 @app.route('/archivos', methods=['GET'])
 def lista_doc():
+    cursoId = request.args.get('cursoId')
     cursor=conexion.connection.cursor()
-    sql = "SELECT * FROM archivo"
+    sql = "SELECT * FROM archivo where curso = '{0}'".format(cursoId)
     cursor.execute(sql)
     datos = cursor.fetchall()
     archivos = []
@@ -126,6 +127,14 @@ def get_pdf(filename):
     except FileNotFoundError:
         return jsonify({'error': 'Archivo no encontrado'}), 404
     
+@app.route('/archivoCarga', methods=['GET'])
+def send_xlsx():
+    file_path = os.path.join('assets\\archivo_carga.xlsx')
+    try:
+        return send_file(file_path, as_attachment=True)
+    except FileNotFoundError:
+        return jsonify({'mensaje':'Error con el envio del archivo'}), 404
+
 @app.route('/pagos', methods=['POST'])
 def agregar_pago():
     cursor = conexion.connection.cursor()
@@ -218,7 +227,6 @@ def obtener_paquetes():
 @app.route('/infoViaje', methods=['GET'])
 def verInfoViaje():
     return viaje.verInfoViaje(conexion)
-
 
 @app.route('/cuotas_curso/<int:curso_id>', methods=['GET'])
 def cuotas_curso(curso_id):
