@@ -19,7 +19,8 @@ def get_alumnos(conexion):
                         al.nom, 
                         al.appat, 
                         al.apmat, 
-                        cu.nomCurso
+                        cu.nomCurso,
+                        cu.id
                 FROM alumno al
                 INNER JOIN user us
                     ON (al.apoderado = us.id)
@@ -36,18 +37,20 @@ def get_alumnos(conexion):
                     'nom':fila[3],
                     'appat':fila[4],
                     'apmat':fila[5],
-                    'curso': fila[6]}
+                    'curso': fila[6],
+                    'idCurso': fila[7]}
             alumnos.append(alumno)
         return jsonify({'alumnos': alumnos, 'mensaje': 'Carga Ok', 'codigo': 200})
     elif(apoderado_param):
         cursor = conexion.connection.cursor()
-        sql = """SELECT al.id, 
+        sql = """SELECT  al.id, 
                         concat(us.nom,' ',us.appat,' ',us.apmat) as apoderado,
                         al.rut, 
                         al.nom, 
                         al.appat, 
                         al.apmat, 
-                        cu.nomCurso
+                        cu.nomCurso,
+                        cu.id
                 FROM alumno al
                 INNER JOIN user us
                     ON (al.apoderado = us.id)
@@ -59,12 +62,13 @@ def get_alumnos(conexion):
         alumnos = []
         for fila in datos:
             alumno ={'id': fila[0], 
-                    'apoderado': fila[1], 
-                    'rut':fila[2], 
-                    'nom':fila[3], 
-                    'appat':fila[4], 
-                    'apmat':fila[5], 
-                    'curso': fila[6]}
+                    'apoderado': fila[1],
+                    'rut':fila[2],
+                    'nom':fila[3],
+                    'appat':fila[4],
+                    'apmat':fila[5],
+                    'curso': fila[6],
+                    'idCurso': fila[7]}
             alumnos.append(alumno)
         return jsonify({'alumnos': alumnos, 'mensaje': 'Carga Ok'}), 200
     elif(rut_param):
@@ -73,13 +77,14 @@ def get_alumnos(conexion):
         return 'hola'
     else:
         cursor=conexion.connection.cursor()
-        sql = """SELECT al.id, 
+        sql = """SELECT  al.id, 
                         concat(us.nom,' ',us.appat,' ',us.apmat) as apoderado,
                         al.rut, 
                         al.nom, 
                         al.appat, 
                         al.apmat, 
-                        cu.nomCurso
+                        cu.nomCurso,
+                        cu.id
                 FROM alumno al
                 INNER JOIN user us
                     ON (al.apoderado = us.id)
@@ -90,12 +95,13 @@ def get_alumnos(conexion):
         alumnos = []
         for fila in datos:
             alumno ={'id': fila[0], 
-                    'apoderado': fila[1], 
-                    'rut':fila[2], 
-                    'nom':fila[3], 
-                    'appat':fila[4], 
-                    'apmat':fila[5], 
-                    'curso': fila[6]}
+                    'apoderado': fila[1],
+                    'rut':fila[2],
+                    'nom':fila[3],
+                    'appat':fila[4],
+                    'apmat':fila[5],
+                    'curso': fila[6],
+                    'idCurso': fila[7]}
             alumnos.append(alumno)
         return jsonify({'alumnos': alumnos, 'mensaje': 'Carga Ok'}), 200
     
@@ -132,7 +138,8 @@ def obtener_alumno_por_id(conexion, id_param):
                     al.nom, 
                     al.appat, 
                     al.apmat, 
-                    cu.nomCurso
+                    cu.nomCurso,
+                    cu.id
             FROM alumno al
             INNER JOIN user us ON (al.apoderado = us.id)
             INNER JOIN curso cu ON (al.curso = cu.id)
@@ -148,8 +155,8 @@ def obtener_alumno_por_id(conexion, id_param):
             'nom': datos[3],
             'appat': datos[4],
             'apmat': datos[5],
-            'curso': datos[6]
-        }
+            'curso': datos[6],
+            'idCurso': datos[7]}
         return alumno
     else:
         return None

@@ -57,7 +57,7 @@ class AuthService():
             return None  # Si ocurre un error, devuelve None
 
 
-@main.route('/')
+@main.route('/validar', methods=['POST'])
 def validar():
     has_access = Security.verify_token(request.headers)
     if has_access:
@@ -65,3 +65,19 @@ def validar():
     else:
         response = jsonify({'message': 'Unauthorized', 'success': False})
         return response, 401
+
+    
+@main.route('/logout', methods=['POST'])
+def logout():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({'message': 'No se proporcionó un token'}), 401
+
+    token = auth_header.split(" ")[1]
+
+    try:
+        # Agregar el token a la lista negra
+        Security.blacklist_token(token)
+        return jsonify({'message': 'Sesión cerrada correctamente'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
