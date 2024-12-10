@@ -5,9 +5,6 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from rutpy import validate
 
-
-#Esta función recupera información de los alumnos desde la base de datos. 
-#Filtra según parámetros opcionales (id, apoderado, rut, curso) y devuelve un JSON con los datos
 def get_alumnos(conexion):
     id_param = request.args.get('id')
     apoderado_param = request.args.get('apoderado')
